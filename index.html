@@ -2,11 +2,33 @@
 	<head>
 		<title>Procedural City - Aivaras Ivoškus</title>
 		<style>
-			body { margin: 0; }
 			canvas { display: block; }
+			body { 
+				margin: 0; 
+				font-family: Monospace;
+			}
+			#info {
+				position: absolute;
+				top: 0px;
+				width: 100%;
+				padding: 20px;
+				box-sizing: border-box;
+				text-align: center;
+				-moz-user-select: none;
+				-webkit-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+				pointer-events: none;
+				z-index: 1; 
+			}
 		</style>
 	</head>
 	<body>
+		<div id="info">
+			Procedural City using three.js
+			<br></br>
+			Controls: WASD - Movement, R - Up, F - Down
+		</div>
 		<script src="js/three.js"></script>
 		<script src="js/FlyControls.js"></script>
 		<script src="js/FirstPersonControls.js"></script>
