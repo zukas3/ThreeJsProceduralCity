@@ -4,7 +4,8 @@ var camera, controls;
 
 var clock = new THREE.Clock();
 
-const BUILDING_DISTANCE_MULTIPLIER = 2;
+const BUILDING_DISTANCE_MULTIPLIER = 8;
+const BUILDING_DISTANCE_OFFSET_X = 600;
 
 var animate = function () {
 	requestAnimationFrame(animate);
@@ -14,7 +15,7 @@ var animate = function () {
 	renderer.render(scene, camera);
 };
 
-function initializeScene(){
+function initialize(){
 	scene = new THREE.Scene();
 	scene.fog = new THREE.FogExp2(0xd0e0f0, 0.0025);
 
@@ -95,7 +96,7 @@ function createBuildings(amount){
 }
 
 function setRandomBuildingTransformation(buildingMesh){
-	buildingMesh.position.x = Math.floor( Math.random() * 200 - 100 ) * BUILDING_DISTANCE_MULTIPLIER + 500;
+	buildingMesh.position.x = Math.floor( Math.random() * 200 - 100 ) * BUILDING_DISTANCE_MULTIPLIER + BUILDING_DISTANCE_OFFSET_X;
 	buildingMesh.position.z = Math.floor( Math.random() * 200 - 100 ) * BUILDING_DISTANCE_MULTIPLIER;
 	
 	buildingMesh.rotation.y = Math.random() * Math.PI * 2;
@@ -121,7 +122,7 @@ function getBuildingTexture(){
 	for(var y = 2; y < 64; y += 2 ){
 		for(var x = 0; x < 32; x += 2 ){
 		  var value = Math.floor( Math.random() * 64 );
-		  context.fillStyle = 'rgb(' + [value, value, value].join( ',' )  + ')';
+		  context.fillStyle = `rgb(${value}, ${value}, ${value})`;
 		  context.fillRect( x, y, 2, 1 );
 		}
 	}
@@ -140,7 +141,6 @@ function getBuildingTexture(){
 	return canvas2;
 }
 
-initializeScene();
 function onWindowResize(){
 
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -153,6 +153,6 @@ function onWindowResize(){
 initialize();
 
 createPlane();
-createBuildings(2000);
+createBuildings(10000);
 
 animate();
