@@ -5,7 +5,11 @@ var camera, controls;
 var clock = new THREE.Clock();
 
 const BUILDING_DISTANCE_MULTIPLIER = 8;
-const BUILDING_DISTANCE_OFFSET_X = 600;
+const BUILDING_DISTANCE_OFFSET_X = 0;
+const BUILDING_DISTANCE_OFFSET_Z = 0;
+
+// Sample the noise
+noise.seed(Math.random());
 
 var animate = function () {
 	requestAnimationFrame(animate);
@@ -20,8 +24,6 @@ function initialize(){
 	scene.fog = new THREE.FogExp2(0xd0e0f0, 0.0025);
 
 	camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000 );
-	camera.position.x = 75;
-	camera.position.z = -120;
 	camera.position.y = 175;
 
 	renderer = new THREE.WebGLRenderer();
@@ -41,7 +43,8 @@ function initialize(){
 	controls.lat = -15;
 	controls.lon = 15;
 
-	window.addEventListener( 'resize', onWindowResize, false );
+	window.addEventListener("resize", onWindowResize, false );
+	window.addEventListener("mouseout", onMouseOut, false );
 }
 
 function createPlane(){
@@ -55,7 +58,7 @@ function createCube(){
 	let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 	let cube = new THREE.Mesh( geometry, material );
 	console.log(cube);
-	scene.add( cube );
+	scene.add(cube);
 }
 
 function createBuildings(amount){
@@ -96,15 +99,18 @@ function createBuildings(amount){
 }
 
 function setRandomBuildingTransformation(buildingMesh){
-	buildingMesh.position.x = Math.floor( Math.random() * 200 - 100 ) * BUILDING_DISTANCE_MULTIPLIER + BUILDING_DISTANCE_OFFSET_X;
-	buildingMesh.position.z = Math.floor( Math.random() * 200 - 100 ) * BUILDING_DISTANCE_MULTIPLIER;
+	let xPos = (Math.random() * 200 - 100) * BUILDING_DISTANCE_MULTIPLIER + BUILDING_DISTANCE_OFFSET_X;
+	let zPos = (Math.random() * 200 - 100) * BUILDING_DISTANCE_MULTIPLIER + BUILDING_DISTANCE_OFFSET_Z; 
+	buildingMesh.position.x = Math.floor(xPos);
+	buildingMesh.position.z = Math.floor(zPos);
 	
 	buildingMesh.rotation.y = Math.random() * Math.PI * 2;
 
 	// More Math randoms to make smaller buildings more frequent (And more random :))
 	buildingMesh.scale.x  = Math.random()*Math.random()*Math.random()*Math.random() * 50 + 10;
 	buildingMesh.scale.z  = buildingMesh.scale.x;
-	buildingMesh.scale.y  = (Math.random() * Math.random() * Math.random() * buildingMesh.scale.x) * 8 + 8;
+	let perlinFactor = (noise.perlin2(xPos / 640, zPos / 640) + 1);
+	buildingMesh.scale.y  = (Math.random() * Math.random() * Math.random() * buildingMesh.scale.x) * perlinFactor * 6 + 8;
 }
 
 function getBuildingTexture(){
@@ -142,12 +148,14 @@ function getBuildingTexture(){
 }
 
 function onWindowResize(){
-
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 
     renderer.setSize( window.innerWidth, window.innerHeight );
+}
 
+function onMouseOut(){
+	console.log("mouse out");
 }
 
 initialize();
