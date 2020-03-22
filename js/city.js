@@ -18,9 +18,10 @@ function initializeScene(){
 	scene = new THREE.Scene();
 	scene.fog = new THREE.FogExp2(0xd0e0f0, 0.0025);
 
-	camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000 );
-	camera.position.z = 0;
-	camera.position.y = 2;
+	camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000 );
+	camera.position.x = 75;
+	camera.position.z = -120;
+	camera.position.y = 175;
 
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -35,6 +36,11 @@ function initializeScene(){
 	controls.movementSpeed = 20;
 	controls.lookSpeed = 0.05;
 	controls.lookVertical = true;
+	// Make camera face-down to the city
+	controls.lat = -15;
+	controls.lon = 15;
+
+	window.addEventListener( 'resize', onWindowResize, false );
 }
 
 function createPlane(){
@@ -135,6 +141,16 @@ function getBuildingTexture(){
 }
 
 initializeScene();
+function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+}
+
+initialize();
 
 createPlane();
 createBuildings(2000);
