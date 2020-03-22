@@ -20,7 +20,7 @@ function initializeScene(){
 
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000 );
 	camera.position.z = 0;
-	camera.position.y = 0.5;
+	camera.position.y = 2;
 
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize( window.innerWidth, window.innerHeight );
@@ -51,42 +51,48 @@ function createCube(){
 	scene.add( cube );
 }
 
-function createBuilding(){
-	let geometry = new THREE.BoxGeometry(1, 1, 1);
+function createBuildings(amount){
+	let buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
 	// Move the pivot point to the bottom
-	geometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
+	buildingGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
 
 	// Remove the bottom face
-	console.log(geometry.faces)
-	geometry.faces.splice(6, 2);
-	geometry.faceVertexUvs[0].splice(6, 2);
-	console.log(geometry.faces)
+	buildingGeometry.faces.splice(6, 2);
+	buildingGeometry.faceVertexUvs[0].splice(6, 2);
 
 	// UV Mapping for the roofs
-	geometry.faceVertexUvs[0][4][0].set(0, 0);
-	geometry.faceVertexUvs[0][4][1].set(0, 0);
-	geometry.faceVertexUvs[0][4][2].set(0, 0);
-	geometry.faceVertexUvs[0][5][0].set(0, 0);
-	geometry.faceVertexUvs[0][5][1].set(0, 0);
-	geometry.faceVertexUvs[0][5][2].set(0, 0);
+	buildingGeometry.faceVertexUvs[0][4][0].set(0, 0);
+	buildingGeometry.faceVertexUvs[0][4][1].set(0, 0);
+	buildingGeometry.faceVertexUvs[0][4][2].set(0, 0);
+	buildingGeometry.faceVertexUvs[0][5][0].set(0, 0);
+	buildingGeometry.faceVertexUvs[0][5][1].set(0, 0);
+	buildingGeometry.faceVertexUvs[0][5][2].set(0, 0);
 
+	let cityGeometry = new THREE.Geometry();
+	for(let i = 0; i < amount; i++){
+		// Build final mesh and add it to scene
+		let buildingMesh = new THREE.Mesh(buildingGeometry);
+		setRandomBuildingTransformation(buildingMesh)
+
+		// Merge meshes together into a single geometry for optimization
+		cityGeometry.mergeMesh(buildingMesh);
+	}
+	
 	// Generate and assign the texture
 	let buildingTexture = new THREE.Texture(getBuildingTexture());
 	buildingTexture.anisotropy = renderer.getMaxAnisotropy();
 	buildingTexture.needsUpdate = true;
 
 	// Build final mesh and add it to scene
-	let buildingMesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial( { map: buildingTexture } ) );
-	setRandomBuildingTransformation(buildingMesh)
-
-	scene.add(buildingMesh);
+	let cityMesh = new THREE.Mesh(cityGeometry, new THREE.MeshLambertMaterial( { map: buildingTexture } ) );
+	scene.add(cityMesh);
 }
 
 function setRandomBuildingTransformation(buildingMesh){
 	buildingMesh.position.x = Math.floor( Math.random() * 200 - 100 ) * BUILDING_DISTANCE_MULTIPLIER + 500;
 	buildingMesh.position.z = Math.floor( Math.random() * 200 - 100 ) * BUILDING_DISTANCE_MULTIPLIER;
 	
-	buildingMesh.rotation.y = Math.random()*Math.PI*2;
+	buildingMesh.rotation.y = Math.random() * Math.PI * 2;
 
 	// More Math randoms to make smaller buildings more frequent (And more random :))
 	buildingMesh.scale.x  = Math.random()*Math.random()*Math.random()*Math.random() * 50 + 10;
@@ -131,7 +137,6 @@ function getBuildingTexture(){
 initializeScene();
 
 createPlane();
-//createCube();
-createBuilding();
+createBuildings(2000);
 
 animate();
