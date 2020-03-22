@@ -1,10 +1,10 @@
 
-var renderer;
-var scene;
-var camera;
-var controls;
+var renderer, scene;
+var camera, controls;
 
 var clock = new THREE.Clock();
+
+const BUILDING_DISTANCE_MULTIPLIER = 2;
 
 var animate = function () {
 	requestAnimationFrame(animate);
@@ -77,10 +77,21 @@ function createBuilding(){
 
 	// Build final mesh and add it to scene
 	let buildingMesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial( { map: buildingTexture } ) );
-	buildingMesh.name = "Building";
-	buildingMesh.position.y = 4;
+	setRandomBuildingTransformation(buildingMesh)
+
 	scene.add(buildingMesh);
-	console.log(buildingMesh);
+}
+
+function setRandomBuildingTransformation(buildingMesh){
+	buildingMesh.position.x = Math.floor( Math.random() * 200 - 100 ) * BUILDING_DISTANCE_MULTIPLIER + 500;
+	buildingMesh.position.z = Math.floor( Math.random() * 200 - 100 ) * BUILDING_DISTANCE_MULTIPLIER;
+	
+	buildingMesh.rotation.y = Math.random()*Math.PI*2;
+
+	// More Math randoms to make smaller buildings more frequent (And more random :))
+	buildingMesh.scale.x  = Math.random()*Math.random()*Math.random()*Math.random() * 50 + 10;
+	buildingMesh.scale.z  = buildingMesh.scale.x;
+	buildingMesh.scale.y  = (Math.random() * Math.random() * Math.random() * buildingMesh.scale.x) * 8 + 8;
 }
 
 function getBuildingTexture(){
@@ -90,9 +101,6 @@ function getBuildingTexture(){
 	
 	// Get Context and Disable the smoothing/aliasing
 	let context = canvas.getContext("2d");
-	context.imageSmoothingEnabled = false;
-	context.webkitImageSmoothingEnabled = false;
-	context.mozImageSmoothingEnabled = false;
 
 	// Fill it all white
 	context.fillStyle = "#ffffff";
@@ -106,14 +114,24 @@ function getBuildingTexture(){
 		}
 	}
 
-	context.drawImage(canvas, 0, 0, 32, 64);
-	return canvas;
+	// We will now create new canvas to stretch the texture
+	let canvas2 = document.createElement("canvas");
+	canvas2.width = 512;
+	canvas2.height  = 1024;
+
+	context = canvas2.getContext("2d");
+	context.imageSmoothingEnabled   = false;
+	context.webkitImageSmoothingEnabled = false;
+	context.mozImageSmoothingEnabled  = false;
+
+	context.drawImage(canvas, 0, 0, canvas2.width, canvas2.height );
+	return canvas2;
 }
 
 initializeScene();
 
 createPlane();
-createCube();
+//createCube();
 createBuilding();
 
 animate();
