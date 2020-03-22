@@ -153,6 +153,6 @@ function onWindowResize(){
 initialize();
 
 createPlane();
-createBuildings(10000);
+createBuildings(20000);
 
 animate();
