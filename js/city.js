@@ -1,6 +1,7 @@
 
 var renderer, scene;
 var camera, controls;
+var mouseInScreen = true;
 
 var clock = new THREE.Clock();
 
@@ -14,7 +15,8 @@ noise.seed(Math.random());
 var animate = function () {
 	requestAnimationFrame(animate);
 
-	controls.update(clock.getDelta());
+	if(mouseInScreen)
+		controls.update(clock.getDelta());
 
 	renderer.render(scene, camera);
 };
@@ -45,6 +47,7 @@ function initialize(){
 
 	window.addEventListener("resize", onWindowResize, false );
 	window.addEventListener("mouseout", onMouseOut, false );
+	window.addEventListener("mouseover", onMouseOver, false );
 }
 
 function createPlane(){
@@ -110,7 +113,7 @@ function setRandomBuildingTransformation(buildingMesh){
 	buildingMesh.scale.x  = Math.random()*Math.random()*Math.random()*Math.random() * 50 + 10;
 	buildingMesh.scale.z  = buildingMesh.scale.x;
 	let perlinFactor = (noise.perlin2(xPos / 640, zPos / 640) + 1);
-	buildingMesh.scale.y  = (Math.random() * Math.random() * Math.random() * buildingMesh.scale.x) * perlinFactor * 6 + 8;
+	buildingMesh.scale.y  = (Math.random() * Math.random() * buildingMesh.scale.x) * perlinFactor * perlinFactor * 6 + 8;
 }
 
 function getBuildingTexture(){
@@ -155,7 +158,11 @@ function onWindowResize(){
 }
 
 function onMouseOut(){
-	console.log("mouse out");
+	mouseInScreen = false;
+}
+
+function onMouseOver(){
+	mouseInScreen = true;
 }
 
 initialize();
