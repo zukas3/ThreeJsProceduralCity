@@ -2,23 +2,29 @@
 var renderer, scene;
 var camera, controls;
 var mouseInScreen = true;
+var stats;
 
 var clock = new THREE.Clock();
 
-const BUILDING_DISTANCE_MULTIPLIER = 8;
+const BUILDING_DISTANCE_MULTIPLIER = 4;
 const BUILDING_DISTANCE_OFFSET_X = 0;
 const BUILDING_DISTANCE_OFFSET_Z = 0;
 
 // Sample the noise
 noise.seed(Math.random());
 
-var animate = function () {
-	requestAnimationFrame(animate);
+function animate () {
+	
+	stats.begin();
 
 	if(mouseInScreen)
 		controls.update(clock.getDelta());
-
+	
 	renderer.render(scene, camera);
+
+	stats.end();
+
+	requestAnimationFrame(animate);
 };
 
 function initialize(){
@@ -31,11 +37,34 @@ function initialize(){
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.setClearColor( 0xd8e7ff ); // This will put sky'ish color
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+	
+	
 	document.body.appendChild( renderer.domElement );
 
-	light = new THREE.HemisphereLight( 0xfffff0, 0x101020, 0.90 );
+	light = new THREE.HemisphereLight( 0xfffff0, 0x101020, 0.6 );
 	light.position.set( 0.75, 5, 0.25 );
 	scene.add(light);
+
+	// LIGHTING
+	var directionalLight = new THREE.DirectionalLight( 0xfffff0, 0.8 );
+	directionalLight.castShadow = true;
+	
+	//Set up shadow properties for the light
+	directionalLight.shadow.mapSize.width = 1028;  
+	directionalLight.shadow.mapSize.height = 1028;
+	directionalLight.shadow.camera = new THREE.OrthographicCamera(-500,500,500,-500, 1, 1000);
+
+	//directionalLight.shadow.camera.updateProjectionMatrix();
+
+	directionalLight.position.set( 0, 100,0 );
+	directionalLight.target.position.set(0, 90, 5);
+	scene.add( directionalLight );
+	scene.add( directionalLight.target)
+
+	const cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+    scene.add(cameraHelper);
 
 	controls = new THREE.FirstPersonControls( camera );
 	controls.movementSpeed = 20;
@@ -50,10 +79,32 @@ function initialize(){
 	window.addEventListener("mouseover", onMouseOver, false );
 }
 
+function createStats(){
+	stats = new Stats();
+	stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+	document.body.appendChild( stats.dom );
+}
+
 function createPlane(){
-	let plane = new THREE.Mesh(new THREE.PlaneGeometry( 2000, 2000 ), new THREE.MeshBasicMaterial( { color: 0xFFFFFF } ) );
+	let plane = new THREE.Mesh(new THREE.PlaneGeometry( 2000, 2000 ), new THREE.MeshStandardMaterial( { color: 0xFFFFFF } ) );
 	plane.rotation.x = -90 * Math.PI / 180;
 	scene.add(plane);
+}
+
+function createTerrain(){
+	var geometry = new THREE.PlaneBufferGeometry(2000, 2000, 256, 256);
+	geometry.rotateX(-Math.PI / 2);
+
+	// TODO: fill thiswda
+	var vertices = geometry.attributes.position.array;
+	for ( var i = 0, j = 0, length = vertices.length; i < length; i ++, j += 3 ) {
+		vertices[ j + 1 ] = Math.sin(i * Math.PI/ 2) * 2;
+	}
+	console.log(vertices.length);
+
+	mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x999999 }) );
+	mesh.receiveShadow = true;
+	scene.add(mesh);
 }
 
 function createCube(){
@@ -98,6 +149,7 @@ function createBuildings(amount){
 
 	// Build final mesh and add it to scene
 	let cityMesh = new THREE.Mesh(cityGeometry, new THREE.MeshLambertMaterial( { map: buildingTexture } ) );
+	cityMesh.castShadow = true;
 	scene.add(cityMesh);
 }
 
@@ -167,7 +219,8 @@ function onMouseOver(){
 
 initialize();
 
-createPlane();
-createBuildings(20000);
+createStats();
+createTerrain();
+createBuildings(1000);
 
 animate();
