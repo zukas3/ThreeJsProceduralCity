@@ -4,20 +4,26 @@
 		<style>
 			canvas { display: block; }
 			body { 
-				margin: 0; 
 				font-family: Monospace;
-				color: black;
-				-webkit-text-stroke-width: 1px;
-				-webkit-text-stroke-color: black;
+				margin: 0; 
 			}
 			#info {
 				position: absolute;
 				top: 0px;
-				width: 100%;
 				padding: 20px;
-				box-sizing: border-box;
+				margin-right: auto;
+
+				left: 35%;
+				right: 35%;
 				text-align: center;
-				z-index: 1; 
+				box-sizing: border-box;
+
+				z-index: 1;
+				flex-shrink: 1;
+				color: black;
+				-webkit-text-stroke-width: 1px;
+				-webkit-text-stroke-color: black;
+
 			}
 		</style>
 	</head>
@@ -32,6 +38,7 @@
 		<script src="js/libs/three.js"></script>
 		<script src="js/libs/perlin.js"></script>
 		<script src="js/libs/stats.js"></script>
+		<script type="text/javascript" src="js/libs/dat.gui.min.js"></script>
 
 		<script src="js/FirstPersonControls.js"></script>
 		<script src="js/city.js"></script>

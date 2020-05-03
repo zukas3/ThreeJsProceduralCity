@@ -1,17 +1,32 @@
-
+// Scene stuff
 var renderer, scene;
-var camera, controls;
+var camera
+var directionalLight;
+
+// Other
+var controls;
 var mouseInScreen = true;
 var stats;
 
+
 var clock = new THREE.Clock();
+
+settings = { 
+	BUILDING_AMOUNT: 1000, 
+	SEED: Math.random(),
+	SHADOW_MAP_SIZE: 1024,
+	REGENERATE: function(){
+		console.log("Regenerate");
+	}}
+
+console.log(settings.BUILDING_AMOUNT);
 
 const BUILDING_DISTANCE_MULTIPLIER = 4;
 const BUILDING_DISTANCE_OFFSET_X = 0;
 const BUILDING_DISTANCE_OFFSET_Z = 0;
 
 // Sample the noise
-noise.seed(Math.random());
+noise.seed(settings.SEED);
 
 function animate () {
 	
@@ -47,32 +62,24 @@ function initialize(){
 	light.position.set( 0.75, 5, 0.25 );
 	scene.add(light);
 
-	// LIGHTING
-	var directionalLight = new THREE.DirectionalLight( 0xfffff0, 0.8 );
+	// General scene lighting
+	directionalLight = new THREE.DirectionalLight( 0xfffff0, 0.8 );
 	directionalLight.castShadow = true;
 	
-	//Set up shadow properties for the light
+	// Set up shadow properties for the light
+	// https://threejs.org/docs/#api/en/cameras/OrthographicCamera
 	directionalLight.shadow.mapSize.width = 1028;  
 	directionalLight.shadow.mapSize.height = 1028;
-	directionalLight.shadow.camera = new THREE.OrthographicCamera(-500,500,500,-500, 1, 1000);
+	directionalLight.shadow.camera = new THREE.OrthographicCamera(-256,256,256,-256, 1, 1024);
 
-	//directionalLight.shadow.camera.updateProjectionMatrix();
-
-	directionalLight.position.set( 0, 100,0 );
+	// Adds the directional ligh t to the set position to the position
+	directionalLight.position.set( 0, 100, 25 );
 	directionalLight.target.position.set(0, 90, 5);
 	scene.add( directionalLight );
 	scene.add( directionalLight.target)
 
 	const cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
     scene.add(cameraHelper);
-
-	controls = new THREE.FirstPersonControls( camera );
-	controls.movementSpeed = 20;
-	controls.lookSpeed = 0.05;
-	controls.lookVertical = true;
-	// Make camera face-down to the city
-	controls.lat = -15;
-	controls.lon = 15;
 
 	window.addEventListener("resize", onWindowResize, false );
 	window.addEventListener("mouseout", onMouseOut, false );
@@ -83,6 +90,25 @@ function createStats(){
 	stats = new Stats();
 	stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
 	document.body.appendChild( stats.dom );
+}
+
+function createGUIControls(){
+	var gui = new dat.GUI();
+
+	var f1 = gui.addFolder("Camera");
+	f1.add(settings, "SHADOW_MAP_SIZE");
+
+	gui.add(settings, "REGENERATE");
+}
+
+function createMouseControls(){
+	controls = new THREE.FirstPersonControls( camera );
+	controls.movementSpeed = 20;
+	controls.lookSpeed = 0.05;
+	controls.lookVertical = true;
+	// Make camera face-down to the city
+	controls.lat = -15;
+	controls.lon = 15;
 }
 
 function createPlane(){
@@ -150,6 +176,7 @@ function createBuildings(amount){
 	// Build final mesh and add it to scene
 	let cityMesh = new THREE.Mesh(cityGeometry, new THREE.MeshLambertMaterial( { map: buildingTexture } ) );
 	cityMesh.castShadow = true;
+	cityMesh.receiveShadow = true;
 	scene.add(cityMesh);
 }
 
@@ -221,6 +248,8 @@ initialize();
 
 createStats();
 createTerrain();
+createMouseControls();
 createBuildings(1000);
+createGUIControls();
 
 animate();
