@@ -2,7 +2,7 @@
 	<head>
 		<title>Procedural City - Aivaras Ivoškus</title>
 		<style>
-			canvas { display: block; }
+			canvas { display: block; z-index: 3 }
 			body { 
 				font-family: Monospace;
 				margin: 0; 
@@ -25,6 +25,13 @@
 				-webkit-text-stroke-color: black;
 
 			}
+			#map-canvas {
+				position: absolute;
+				bottom: 0;
+				right: 0;
+				z-index: 2;
+				border:1px solid #000000;
+			}
 		</style>
 	</head>
 	<body>
@@ -38,9 +45,13 @@
 		<script src="js/libs/three.js"></script>
 		<script src="js/libs/perlin.js"></script>
 		<script src="js/libs/stats.js"></script>
-		<script type="text/javascript" src="js/libs/dat.gui.min.js"></script>
+		<script src="js/libs/d3-delaunay.min.js"></script>
+		<script src="js/libs/dat.gui.min.js"></script>
 
+		<canvas id="map-canvas" width="256" height="256"></canvas>
 		<script src="js/FirstPersonControls.js"></script>
+		<script src="js/map.js"></script>
 		<script src="js/city.js"></script>
+
 	</body>
 </html>
