@@ -21,7 +21,7 @@ settings = {
 
 console.log(settings.BUILDING_AMOUNT);
 
-const BUILDING_DISTANCE_MULTIPLIER = 4;
+const CITY_SIZE = 512;
 const BUILDING_DISTANCE_OFFSET_X = 0;
 const BUILDING_DISTANCE_OFFSET_Z = 0;
 
@@ -181,8 +181,8 @@ function createBuildings(amount){
 }
 
 function setRandomBuildingTransformation(buildingMesh){
-	let xPos = (Math.random() * 200 - 100) * BUILDING_DISTANCE_MULTIPLIER + BUILDING_DISTANCE_OFFSET_X;
-	let zPos = (Math.random() * 200 - 100) * BUILDING_DISTANCE_MULTIPLIER + BUILDING_DISTANCE_OFFSET_Z; 
+	let xPos = (Math.random() * 2 - 1) * CITY_SIZE + BUILDING_DISTANCE_OFFSET_X;
+	let zPos = (Math.random() * 2 - 1) * CITY_SIZE + BUILDING_DISTANCE_OFFSET_Z; 
 	buildingMesh.position.x = Math.floor(xPos);
 	buildingMesh.position.z = Math.floor(zPos);
 	
@@ -193,6 +193,31 @@ function setRandomBuildingTransformation(buildingMesh){
 	buildingMesh.scale.z  = buildingMesh.scale.x;
 	let perlinFactor = (noise.perlin2(xPos / 640, zPos / 640) + 1);
 	buildingMesh.scale.y  = (Math.random() * Math.random() * buildingMesh.scale.x) * perlinFactor * perlinFactor * 6 + 8;
+}
+
+function createCellFoundations(){
+	for(let i = 0; i < map.cells.length; i++){
+		console.log(map.cells[i].polygons)
+		var shape = new THREE.Shape();
+
+		// Move through the current polygon and offset it by -256
+		let polygon = map.cells[i].polygons[0]
+
+		shape.moveTo(polygon[0] * 4 - 512, polygon[1] * 4 - 512)
+		for(let j = 1; j < map.cells[i].polygons.length; j++){
+			polygon = map.cells[i].polygons[j];
+			shape.lineTo(polygon[0] * 4 - 512, polygon[1] * 4 - 512)
+		}
+
+		var extrudeSettings = { amount: 0.25 };
+		var geometry = new THREE.ExtrudeBufferGeometry(shape, extrudeSettings);
+
+		let color = (map.cells[i].hasBuildings ? 0xAAAAAA : 0x00FF00);
+
+		var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: color } ) );
+		mesh.rotation.x = Math.PI * 0.5;
+		scene.add(mesh);
+	}
 }
 
 function getBuildingTexture(){
@@ -250,6 +275,7 @@ createStats();
 createTerrain();
 createMouseControls();
 createBuildings(1000);
+createCellFoundations();
 createGUIControls();
 
 animate();
