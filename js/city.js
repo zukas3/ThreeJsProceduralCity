@@ -141,7 +141,7 @@ function createCube(){
 	scene.add(cube);
 }
 
-function createBuildings(amount){
+function getBuildingGeometry(){
 	let buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
 	// Move the pivot point to the bottom
 	buildingGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
@@ -157,7 +157,11 @@ function createBuildings(amount){
 	buildingGeometry.faceVertexUvs[0][5][0].set(0, 0);
 	buildingGeometry.faceVertexUvs[0][5][1].set(0, 0);
 	buildingGeometry.faceVertexUvs[0][5][2].set(0, 0);
+	return buildingGeometry;
+}
 
+function createRandomBuildings(amount){
+	let buildingGeometry = getBuildingGeometry();
 	let cityGeometry = new THREE.Geometry();
 	for(let i = 0; i < amount; i++){
 		// Build final mesh and add it to scene
@@ -195,12 +199,44 @@ function setRandomBuildingTransformation(buildingMesh){
 	buildingMesh.scale.y  = (Math.random() * Math.random() * buildingMesh.scale.x) * perlinFactor * perlinFactor * 6 + 8;
 }
 
+function createBuildingsFromPoints(points, approximateHeight){
+	let buildingGeometry = getBuildingGeometry();
+	let cityGeometry = new THREE.Geometry();
+	for(let i = 0; i < points.length; i++){
+		// Build final mesh and add it to scene
+		let buildingMesh = new THREE.Mesh(buildingGeometry);
+
+		// Set transformation
+		buildingMesh.rotation.y = Math.random() * Math.PI * 2;
+
+		buildingMesh.position.x = points[i][0] * 4 - 512
+		buildingMesh.position.z = points[i][1] * 4 - 512
+
+		buildingMesh.scale.x  = Math.random() * Math.random() *Math.random() * Math.random() * 50 + 10;
+		buildingMesh.scale.z  = buildingMesh.scale.x;
+		buildingMesh.scale.y  = approximateHeight + 20 * Math.random() * Math.random();
+
+		// Merge meshes together into a single geometry for optimization
+		cityGeometry.mergeMesh(buildingMesh);
+	}
+	
+	// Generate and assign the texture
+	let buildingTexture = new THREE.Texture(getBuildingTexture());
+	buildingTexture.anisotropy = renderer.getMaxAnisotropy();
+	buildingTexture.needsUpdate = true;
+
+	// Build final mesh and add it to scene
+	let cityMesh = new THREE.Mesh(cityGeometry, new THREE.MeshLambertMaterial( { map: buildingTexture } ) );
+	cityMesh.castShadow = true;
+	cityMesh.receiveShadow = true;
+	scene.add(cityMesh);
+}
+
 function createCellFoundations(){
 	for(let i = 0; i < map.cells.length; i++){
-		console.log(map.cells[i].polygons)
 		var shape = new THREE.Shape();
 
-		// Move through the current polygon and offset it by -256
+		// Move through the current polygon and offset it by city scale times 
 		let polygon = map.cells[i].polygons[0]
 
 		shape.moveTo(polygon[0] * 4 - 512, polygon[1] * 4 - 512)
@@ -209,10 +245,17 @@ function createCellFoundations(){
 			shape.lineTo(polygon[0] * 4 - 512, polygon[1] * 4 - 512)
 		}
 
-		var extrudeSettings = { amount: 0.25 };
+		var extrudeSettings = { depth: 0.25 };
 		var geometry = new THREE.ExtrudeBufferGeometry(shape, extrudeSettings);
 
-		let color = (map.cells[i].hasBuildings ? 0xAAAAAA : 0x00FF00);
+		let color;
+		if(map.cells[i].hasBuildings)
+		{
+			var value = Math.floor( Math.random() * 128) + 40;
+			color = `rgb(${value}, ${value}, ${value})`;
+		}
+		else
+			color = 0x00AA00
 
 		var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: color } ) );
 		mesh.rotation.x = Math.PI * 0.5;
@@ -272,10 +315,18 @@ function onMouseOver(){
 initialize();
 
 createStats();
-createTerrain();
-createMouseControls();
-createBuildings(1000);
-createCellFoundations();
 createGUIControls();
+createMouseControls();
+
+// Geometry
+createTerrain();
+createCellFoundations();
+
+let i = 0;
+for(i; i < map.cells.length; i++){
+
+	if(map.cells[i].hasBuildings)
+		createBuildingsFromPoints(map.cells[i].randomPoints, Math.random() * Math.random() * 90 + 15)
+}
 
 animate();
