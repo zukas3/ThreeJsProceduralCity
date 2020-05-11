@@ -29,14 +29,20 @@ const BUILDING_DISTANCE_OFFSET_Z = 0;
 noise.seed(settings.SEED);
 
 function animate () {
-	
 	stats.begin();
 
 	if(mouseInScreen)
 		controls.update(clock.getDelta());
 	
-	renderer.render(scene, camera);
+	// Move light
+	const newTargetVector = new THREE.Vector3( );
+	newTargetVector.copy(camera.position)
+	newTargetVector.add(new THREE.Vector3(-1, -10, -20))
 
+	directionalLight.position.copy(camera.position)
+	directionalLight.target.position.copy(newTargetVector)
+
+	renderer.render(scene, camera);
 	stats.end();
 
 	requestAnimationFrame(animate);
@@ -68,12 +74,13 @@ function initialize(){
 	
 	// Set up shadow properties for the light
 	// https://threejs.org/docs/#api/en/cameras/OrthographicCamera
-	directionalLight.shadow.mapSize.width = 1028;  
-	directionalLight.shadow.mapSize.height = 1028;
-	directionalLight.shadow.camera = new THREE.OrthographicCamera(-256,256,256,-256, 1, 1024);
+	directionalLight.shadow.mapSize.width = 2048;  
+	directionalLight.shadow.mapSize.height = 2048;
+	directionalLight.shadow.camera = new THREE.OrthographicCamera(-512,512,512,-512, 1, 1000);
 
 	// Adds the directional ligh t to the set position to the position
 	directionalLight.position.set( 0, 100, 25 );
+
 	directionalLight.target.position.set(0, 90, 5);
 	scene.add( directionalLight );
 	scene.add( directionalLight.target)
@@ -126,7 +133,6 @@ function createTerrain(){
 	for ( var i = 0, j = 0, length = vertices.length; i < length; i ++, j += 3 ) {
 		vertices[ j + 1 ] = Math.sin(i * Math.PI/ 2) * 2;
 	}
-	console.log(vertices.length);
 
 	mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0x999999 }) );
 	mesh.receiveShadow = true;
@@ -137,7 +143,6 @@ function createCube(){
 	let geometry = new THREE.BoxGeometry();
 	let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 	let cube = new THREE.Mesh( geometry, material );
-	console.log(cube);
 	scene.add(cube);
 }
 
@@ -257,8 +262,9 @@ function createCellFoundations(){
 		else
 			color = 0x00AA00
 
-		var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: color } ) );
+		var mesh = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: color } ) );
 		mesh.rotation.x = Math.PI * 0.5;
+		mesh.receiveShadow = true;
 		scene.add(mesh);
 	}
 }
@@ -326,7 +332,7 @@ let i = 0;
 for(i; i < map.cells.length; i++){
 
 	if(map.cells[i].hasBuildings)
-		createBuildingsFromPoints(map.cells[i].randomPoints, Math.random() * Math.random() * 90 + 15)
+		createBuildingsFromPoints(map.cells[i].randomPoints, Math.random() * Math.random() * Math.random() * 120 + 20)
 }
 
 animate();
