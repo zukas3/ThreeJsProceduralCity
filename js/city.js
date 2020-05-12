@@ -1,6 +1,6 @@
 // Scene stuff
 var renderer, scene;
-var camera
+var camera, cameraHelper;
 var directionalLight;
 
 // Other
@@ -14,7 +14,8 @@ var clock = new THREE.Clock();
 settings = { 
 	BUILDING_AMOUNT: 1000, 
 	SEED: Math.random(),
-	SHADOW_MAP_SIZE: 1024,
+	CAMERA_HELPER_ENABLE: false,
+	SHADOW_MAP_SIZE: 2048,
 	REGENERATE: function(){
 		console.log("Regenerate");
 	}}
@@ -37,9 +38,13 @@ function animate () {
 	// Move light
 	const newTargetVector = new THREE.Vector3( );
 	newTargetVector.copy(camera.position)
-	newTargetVector.add(new THREE.Vector3(-1, -10, -20))
+	newTargetVector.add(new THREE.Vector3(380, -10, 385))
+	newTargetVector.y = 110;
+
 
 	directionalLight.position.copy(camera.position)
+	directionalLight.position.add(new THREE.Vector3(400,0,400))
+	directionalLight.position.y = 125;
 	directionalLight.target.position.copy(newTargetVector)
 
 	renderer.render(scene, camera);
@@ -74,8 +79,8 @@ function initialize(){
 	
 	// Set up shadow properties for the light
 	// https://threejs.org/docs/#api/en/cameras/OrthographicCamera
-	directionalLight.shadow.mapSize.width = 2048;  
-	directionalLight.shadow.mapSize.height = 2048;
+	directionalLight.shadow.mapSize.width = settings.SHADOW_MAP_SIZE;  
+	directionalLight.shadow.mapSize.height = settings.SHADOW_MAP_SIZE;
 	directionalLight.shadow.camera = new THREE.OrthographicCamera(-512,512,512,-512, 1, 1000);
 
 	// Adds the directional ligh t to the set position to the position
@@ -85,7 +90,7 @@ function initialize(){
 	scene.add( directionalLight );
 	scene.add( directionalLight.target)
 
-	const cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+	cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
     scene.add(cameraHelper);
 
 	window.addEventListener("resize", onWindowResize, false );
@@ -102,10 +107,17 @@ function createStats(){
 function createGUIControls(){
 	var gui = new dat.GUI();
 
-	var f1 = gui.addFolder("Camera");
-	f1.add(settings, "SHADOW_MAP_SIZE");
+	const f1 = gui.addFolder("Camera");
+	let controller = f1.add(settings, "SHADOW_MAP_SIZE");
+	controller.onChange(function(value){
+		console.log(value);
+	});
 
-	gui.add(settings, "REGENERATE");
+	f1.add(settings, "CAMERA_HELPER_ENABLE").onChange(function(value){
+		cameraHelper.visible = value;
+	});
+
+	//gui.add(settings, "REGENERATE");
 }
 
 function createMouseControls(){
