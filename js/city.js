@@ -41,13 +41,15 @@ function animate () {
 	newTargetVector.add(new THREE.Vector3(380, -10, 385))
 	newTargetVector.y = 110;
 
-
 	directionalLight.position.copy(camera.position)
 	directionalLight.position.add(new THREE.Vector3(400,0,400))
 	directionalLight.position.y = 125;
 	directionalLight.target.position.copy(newTargetVector)
 
+	// Render scene and map
+	map.drawMap([camera.position.x,camera.position.z])
 	renderer.render(scene, camera);
+
 	stats.end();
 
 	requestAnimationFrame(animate);
@@ -227,6 +229,7 @@ function createBuildingsFromPoints(points, approximateHeight, approximateRotatio
 		// Set transformation
 		buildingMesh.rotation.y = approximateRotation + Math.random() * Math.PI * 0.1;
 
+		// Offset from map's scale
 		buildingMesh.position.x = points[i][0] * 4 - 512
 		buildingMesh.position.z = points[i][1] * 4 - 512
 

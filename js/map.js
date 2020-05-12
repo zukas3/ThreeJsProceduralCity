@@ -1,5 +1,6 @@
 var map = {}
 var voronoi, delaunay;
+var context;
 
 const WIDTH = 256;
 const HEIGHT = 256;
@@ -18,7 +19,7 @@ function getRandomPointsInCell(index, amount){
 }
 
 function generate(){
-    const context = document.getElementById("map-canvas").getContext("2d");
+    context = document.getElementById("map-canvas").getContext("2d");
 
     let points = [];
     let i;
@@ -38,23 +39,20 @@ function generate(){
     voronoi.renderBounds(context);
     context.stroke();
     
+    
     // Prepare cells array
     map.cells = [];
     map.width = WIDTH;
     map.height = HEIGHT;
     map.contains = voronoi.contains;
     map.getRandomPointsInCell = getRandomPointsInCell;
+    map.drawMap = drawMapOnCanvas
 
-    // Paint every 2nd cell red
+    // Set cell info
     i = 0;
     for(const cell of voronoi.cellPolygons()){
         if(i % 6 == 0){
             map.cells.push({polygons: cell, hasBuildings: false})
-            context.beginPath();
-            context.strokeStyle = "#0F0";
-            voronoi.renderCell(i,context)
-            voronoi.renderCell(i,context)
-            context.stroke();
         } else {
             map.cells.push({polygons: cell, hasBuildings: true, randomPoints: getRandomPointsInCell(i, 256)})
         }
@@ -62,4 +60,36 @@ function generate(){
     }
 }
 
+function drawMapOnCanvas(point){
+    context.fillStyle = "#ccc";
+    context.fillRect(0,0,256,256)
+
+    context.strokeStyle = "#000";
+    voronoi.render(context);
+    voronoi.renderBounds(context);
+    context.stroke();
+
+    i = 0;
+    for(const cell of voronoi.cellPolygons()){
+        if(i % 6 == 0){
+            context.beginPath();
+            context.strokeStyle = "#0F0";
+            voronoi.renderCell(i,context)
+            voronoi.renderCell(i,context)
+            context.stroke();
+        } else {
+            
+        }
+        i++;
+    }
+
+    if(point != null){
+        context.beginPath();
+        context.fillStyle = "#73f0ee"
+        context.arc(point[0] / 4 + 128, point[1] / 4 +128, 7, 0, 2 * Math.PI);
+        context.fill();
+    }
+}
+
 generate();
+drawMapOnCanvas();
