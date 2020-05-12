@@ -56,8 +56,7 @@ function generate(){
             voronoi.renderCell(i,context)
             context.stroke();
         } else {
-            map.cells.push({polygons: cell, hasBuildings: true, randomPoints: getRandomPointsInCell(i, 128)})
-            console.log(map.cells[i].randomPoints);
+            map.cells.push({polygons: cell, hasBuildings: true, randomPoints: getRandomPointsInCell(i, 256)})
         }
         i++;
     }
