@@ -161,7 +161,7 @@ function createCube(){
 function getBuildingGeometry(){
 	let buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
 	// Move the pivot point to the bottom
-	buildingGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
+	buildingGeometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
 
 	// Remove the bottom face
 	buildingGeometry.faces.splice(6, 2);
@@ -216,25 +216,49 @@ function setRandomBuildingTransformation(buildingMesh){
 	buildingMesh.scale.y  = (Math.random() * Math.random() * buildingMesh.scale.x) * perlinFactor * perlinFactor * 6 + 8;
 }
 
-function createBuildingsFromPoints(points, approximateHeight){
+function createBuildingsFromPoints(points, approximateHeight, approximateRotation){
 	let buildingGeometry = getBuildingGeometry();
 	let cityGeometry = new THREE.Geometry();
+	let boundingBoxes = [];
 	for(let i = 0; i < points.length; i++){
 		// Build final mesh and add it to scene
 		let buildingMesh = new THREE.Mesh(buildingGeometry);
 
 		// Set transformation
-		buildingMesh.rotation.y = Math.random() * Math.PI * 2;
+		buildingMesh.rotation.y = approximateRotation + Math.random() * Math.PI * 0.1;
 
 		buildingMesh.position.x = points[i][0] * 4 - 512
 		buildingMesh.position.z = points[i][1] * 4 - 512
 
-		buildingMesh.scale.x  = Math.random() * Math.random() *Math.random() * Math.random() * 50 + 10;
-		buildingMesh.scale.z  = buildingMesh.scale.x;
+		buildingMesh.scale.x  = Math.random() * Math.random() * Math.random() * approximateHeight * 0.25 + 16 + 16 * (approximateHeight * 0.01);
+
+		// Randomize size
+		if(Math.random() > 0.25)
+			buildingMesh.scale.z  = buildingMesh.scale.x;
+		else
+			buildingMesh.scale.z  = buildingMesh.scale.x * 2;
+
 		buildingMesh.scale.y  = approximateHeight + 20 * Math.random() * Math.random();
 
-		// Merge meshes together into a single geometry for optimization
-		cityGeometry.mergeMesh(buildingMesh);
+		// Create bounding box and comapre for other boxes
+		//buildingMesh.geometry.computeBoundingBox();wf
+		let boundingBox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+		let doesIntersect = false;
+		boundingBox.setFromObject(buildingMesh);
+
+		for(let j = 0; j < boundingBoxes.length; j++){
+			if(boundingBox.intersectsBox(boundingBoxes[j])){
+				doesIntersect = true;
+				break;
+			}
+		}
+
+		if(!doesIntersect)
+		{
+			// Merge meshes together into a single geometry for optimization
+			cityGeometry.mergeMesh(buildingMesh);
+			boundingBoxes.push(boundingBox);
+		}
 	}
 	
 	// Generate and assign the texture
@@ -344,7 +368,9 @@ let i = 0;
 for(i; i < map.cells.length; i++){
 
 	if(map.cells[i].hasBuildings)
-		createBuildingsFromPoints(map.cells[i].randomPoints, Math.random() * Math.random() * Math.random() * 120 + 20)
+		createBuildingsFromPoints(map.cells[i].randomPoints, 
+			Math.random() * Math.random() * Math.random() * 140 + 15,
+			Math.random() * Math.PI * 2)
 }
 
 animate();
