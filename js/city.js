@@ -155,7 +155,7 @@ function createTerrain(){
 
 function createCube(){
 	let geometry = new THREE.BoxGeometry();
-	let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+	let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 }, { vertexColors: true } );
 	let cube = new THREE.Mesh( geometry, material );
 	scene.add(cube);
 }
@@ -169,7 +169,28 @@ function getBuildingGeometry(){
 	buildingGeometry.faces.splice(6, 2);
 	buildingGeometry.faceVertexUvs[0].splice(6, 2);
 
-	// UV Mapping for the roofs
+	// Vertex color assignment
+	const possibleColors = [
+		new THREE.Color(0xc78689), // Red'ish/Brown
+		new THREE.Color(0xa9a39c), // Gray'ish
+		new THREE.Color(0x026397), // Blue
+		new THREE.Color(0xddcfb4)] // Marble-like
+	const randomColor = possibleColors[Math.floor(Math.random() * possibleColors.length)];
+	let slightlyModified = new THREE.Color()
+	slightlyModified.copy(randomColor);
+	slightlyModified.r += Math.random() * 0.2 - 0.1;
+	slightlyModified.g += Math.random() * 0.2 - 0.1;
+	slightlyModified.b += Math.random() * 0.2 - 0.1;
+
+	for(let i = 0; i < buildingGeometry.faces.length; i++){
+		buildingGeometry.faces[i].color = slightlyModified;
+		console.log(randomColor);
+	}
+
+	buildingGeometry.colorsNeedUpdate = true
+	console.log(buildingGeometry.faces[0].vertexColors)
+
+	// UV Mapping for the roofswrd
 	buildingGeometry.faceVertexUvs[0][4][0].set(0, 0);
 	buildingGeometry.faceVertexUvs[0][4][1].set(0, 0);
 	buildingGeometry.faceVertexUvs[0][4][2].set(0, 0);
@@ -179,6 +200,9 @@ function getBuildingGeometry(){
 	return buildingGeometry;
 }
 
+////
+// NOT USED ANYMORE
+////
 function createRandomBuildings(amount){
 	let buildingGeometry = getBuildingGeometry();
 	let cityGeometry = new THREE.Geometry();
@@ -197,7 +221,7 @@ function createRandomBuildings(amount){
 	buildingTexture.needsUpdate = true;
 
 	// Build final mesh and add it to scene
-	let cityMesh = new THREE.Mesh(cityGeometry, new THREE.MeshLambertMaterial( { map: buildingTexture } ) );
+	let cityMesh = new THREE.Mesh(cityGeometry, new THREE.MeshBasicMaterial( { map: buildingTexture, vertexColors: THREE.VertexColors } ) );
 	cityMesh.castShadow = true;
 	cityMesh.receiveShadow = true;
 	scene.add(cityMesh);
@@ -244,7 +268,6 @@ function createBuildingsFromPoints(points, approximateHeight, approximateRotatio
 		buildingMesh.scale.y  = approximateHeight + 20 * Math.random() * Math.random();
 
 		// Create bounding box and comapre for other boxes
-		//buildingMesh.geometry.computeBoundingBox();wf
 		let boundingBox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
 		let doesIntersect = false;
 		boundingBox.setFromObject(buildingMesh);
@@ -270,7 +293,7 @@ function createBuildingsFromPoints(points, approximateHeight, approximateRotatio
 	buildingTexture.needsUpdate = true;
 
 	// Build final mesh and add it to scene
-	let cityMesh = new THREE.Mesh(cityGeometry, new THREE.MeshLambertMaterial( { map: buildingTexture } ) );
+	let cityMesh = new THREE.Mesh(cityGeometry, new THREE.MeshLambertMaterial( { map: buildingTexture, vertexColors: THREE.VertexColors } )  );
 	cityMesh.castShadow = true;
 	cityMesh.receiveShadow = true;
 	scene.add(cityMesh);
@@ -334,6 +357,8 @@ function getBuildingTexture(){
 	canvas2.height  = 1024;
 
 	context = canvas2.getContext("2d");
+
+	// turn off smoothing
 	context.imageSmoothingEnabled   = false;
 	context.webkitImageSmoothingEnabled = false;
 	context.mozImageSmoothingEnabled  = false;
