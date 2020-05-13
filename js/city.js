@@ -20,8 +20,6 @@ settings = {
 		console.log("Regenerate");
 	}}
 
-console.log(settings.BUILDING_AMOUNT);
-
 const CITY_SIZE = 512;
 const BUILDING_DISTANCE_OFFSET_X = 0;
 const BUILDING_DISTANCE_OFFSET_Z = 0;
@@ -118,8 +116,6 @@ function createGUIControls(){
 	f1.add(settings, "CAMERA_HELPER_ENABLE").onChange(function(value){
 		cameraHelper.visible = value;
 	});
-
-	//gui.add(settings, "REGENERATE");
 }
 
 function createMouseControls(){
@@ -130,12 +126,6 @@ function createMouseControls(){
 	// Make camera face-down to the city
 	controls.lat = -15;
 	controls.lon = 15;
-}
-
-function createPlane(){
-	let plane = new THREE.Mesh(new THREE.PlaneGeometry( 2000, 2000 ), new THREE.MeshStandardMaterial( { color: 0xFFFFFF } ) );
-	plane.rotation.x = -90 * Math.PI / 180;
-	scene.add(plane);
 }
 
 function createTerrain(){
@@ -153,13 +143,6 @@ function createTerrain(){
 	scene.add(mesh);
 }
 
-function createCube(){
-	let geometry = new THREE.BoxGeometry();
-	let material = new THREE.MeshBasicMaterial( { color: 0x00ff00 }, { vertexColors: true } );
-	let cube = new THREE.Mesh( geometry, material );
-	scene.add(cube);
-}
-
 function getBuildingGeometry(){
 	let buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
 	// Move the pivot point to the bottom
@@ -168,6 +151,34 @@ function getBuildingGeometry(){
 	// Remove the bottom face
 	buildingGeometry.faces.splice(6, 2);
 	buildingGeometry.faceVertexUvs[0].splice(6, 2);
+
+	// Add roof 
+	if(Math.random() > 0.75){
+		buildingGeometry.vertices.push(new THREE.Vector3(0,1.25,0.5));
+		buildingGeometry.vertices.push(new THREE.Vector3(0,1.25,-0.5));
+
+		buildingGeometry.faces.push(new THREE.Face3(4,8,9))
+		buildingGeometry.faces.push(new THREE.Face3(4,5,8))
+		buildingGeometry.faces.push(new THREE.Face3(9,8,0))
+		buildingGeometry.faces.push(new THREE.Face3(0,1,9))
+		// Sides
+		buildingGeometry.faces.push(new THREE.Face3(1,4,9))
+		buildingGeometry.faces.push(new THREE.Face3(5,0,8))
+
+		// UV fix
+		for(let i = 0; i < 4; i++){
+			buildingGeometry.faceVertexUvs[0].push([new THREE.Vector2(0,0),new THREE.Vector2(0,0),new THREE.Vector2(0,0)])
+		}
+
+		for(let i = 0; i < 2; i++){
+			buildingGeometry.faceVertexUvs[0].push([new THREE.Vector2(0,0),new THREE.Vector2(1,1),new THREE.Vector2(0,0)])
+		}
+
+		buildingGeometry.elementsNeedUpdate = true;
+		buildingGeometry.computeFaceNormals();
+		buildingGeometry.computeVertexNormals();
+		console.log(buildingGeometry.faceVertexUvs)
+	}
 
 	// Vertex color assignment
 	const possibleColors = [
@@ -184,11 +195,9 @@ function getBuildingGeometry(){
 
 	for(let i = 0; i < buildingGeometry.faces.length; i++){
 		buildingGeometry.faces[i].color = slightlyModified;
-		console.log(randomColor);
 	}
 
 	buildingGeometry.colorsNeedUpdate = true
-	console.log(buildingGeometry.faces[0].vertexColors)
 
 	// UV Mapping for the roofswrd
 	buildingGeometry.faceVertexUvs[0][4][0].set(0, 0);
