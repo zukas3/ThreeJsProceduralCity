@@ -91,6 +91,7 @@ function initialize(){
 	scene.add( directionalLight.target)
 
 	cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+	cameraHelper.visible = false;
     scene.add(cameraHelper);
 
 	window.addEventListener("resize", onWindowResize, false );
