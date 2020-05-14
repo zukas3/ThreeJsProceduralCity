@@ -42,6 +42,7 @@ function generate(){
     
     // Prepare cells array
     map.cells = [];
+    map.points = [];
     map.width = WIDTH;
     map.height = HEIGHT;
     map.contains = voronoi.contains;
@@ -51,12 +52,37 @@ function generate(){
     // Set cell info
     i = 0;
     for(const cell of voronoi.cellPolygons()){
+
         if(i % 6 == 0){
             map.cells.push({polygons: cell, hasBuildings: false})
         } else {
             map.cells.push({polygons: cell, hasBuildings: true, randomPoints: getRandomPointsInCell(i, 256)})
         }
+
+        // Gather all points
+        for(let j = 0; j < cell.length; j++){
+            map.points.push(cell[j]);
+        }
+
+        // Increment
         i++;
+    }
+
+    // Generate road
+    let currCell = 0;
+    let currPoint = voronoi.cellPolygon(currCell)[0];
+    let currClosest = [256,256];
+    
+    while(true)
+    {
+        for(const cell of voronoi.neighbors(currCell)){
+            points = voronoi.neighbors();
+            for(let i = 0; i < points.length; i++){
+                //if(points[i][0] < currPoint[0] && points[i][0] > currClosest[])
+            }
+        }
+
+        break;
     }
 }
 

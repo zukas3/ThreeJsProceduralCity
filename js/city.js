@@ -166,18 +166,17 @@ function getBuildingGeometry(){
 		buildingGeometry.faces.push(new THREE.Face3(5,0,8))
 
 		// UV fix
-		for(let i = 0; i < 4; i++){
+		for(let i = 0; i < 6; i++){
 			buildingGeometry.faceVertexUvs[0].push([new THREE.Vector2(0,0),new THREE.Vector2(0,0),new THREE.Vector2(0,0)])
 		}
-
-		for(let i = 0; i < 2; i++){
-			buildingGeometry.faceVertexUvs[0].push([new THREE.Vector2(0,0),new THREE.Vector2(1,1),new THREE.Vector2(0,0)])
-		}
+		// Sides
+		//for(let i = 0; i < 2; i++){
+		//	buildingGeometry.faceVertexUvs[0].push([new THREE.Vector2(0,0),new THREE.Vector2(0.5,0.5),new THREE.Vector2(0,0)])
+		//}
 
 		buildingGeometry.elementsNeedUpdate = true;
 		buildingGeometry.computeFaceNormals();
 		buildingGeometry.computeVertexNormals();
-		console.log(buildingGeometry.faceVertexUvs)
 	}
 
 	// Vertex color assignment
@@ -251,10 +250,12 @@ function setRandomBuildingTransformation(buildingMesh){
 	buildingMesh.scale.y  = (Math.random() * Math.random() * buildingMesh.scale.x) * perlinFactor * perlinFactor * 6 + 8;
 }
 
+// TODO put this back into Create Buildigns from poits and optimize it
+var boundingBoxes = [];
+
 function createBuildingsFromPoints(points, approximateHeight, approximateRotation){
 	let buildingGeometry = getBuildingGeometry();
 	let cityGeometry = new THREE.Geometry();
-	let boundingBoxes = [];
 	for(let i = 0; i < points.length; i++){
 		// Build final mesh and add it to scene
 		let buildingMesh = new THREE.Mesh(buildingGeometry);
@@ -394,7 +395,7 @@ function onMouseOver(){
 initialize();
 
 createStats();
-createGUIControls();
+//createGUIControls();
 createMouseControls();
 
 // Geometry
