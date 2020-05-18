@@ -18,13 +18,63 @@ function getRandomPointsInCell(index, amount){
     return points;
 }
 
+// 
+function generateRoadOld(){
+    // Generate road
+    let currCell = 0;
+    let currPoint = voronoi.cellPolygon(currCell)[0];
+    let currClosest = [256,256];
+    let pointArray = [currPoint];
+    
+    while(true)
+    {
+        for(const cell of voronoi.neighbors(currCell)){
+            points = voronoi.neighbors();
+            for(let i = 0; i < points.length; i++){
+                // If inspected point is to the right of currPoint and left of currClosest
+                if(points[i][0] > currPoint[0] && points[i][0] < currClosest[0]){
+                    currClosest = points[i]
+                }
+            }
+
+            currClosest
+        }
+
+        if(points[i] >= 256)
+            break;
+    }
+}
+
+function generateRoad(){
+    let roadPoints = [];
+
+    let currentY = Math.random() * HEIGHT;
+    let currentX = 0;
+    roadPoints.push([currentX,currentY])
+    while(currentX < 256){
+        currentX = currentX + 16 + Math.random() * 32;
+        currentX = Math.min(256, currentX);
+
+        currentY = currentY + (Math.random() - 0.5) * 64;
+        console.log(currentY);
+        // Clamp
+        currentY = Math.min(Math.max(0,currentY), 256);
+        console.log(currentY);
+
+        // Add to points
+        roadPoints.push([currentX, currentY])
+    }
+
+    map.roadPoints = roadPoints;
+}
+
 function generate(){
     context = document.getElementById("map-canvas").getContext("2d");
 
     let points = [];
     let i;
     for(i = 0; i < 32; i++){
-        points.push([Math.random() * WIDTH,Math.random() * HEIGHT])
+        points.push([Math.random() * WIDTH, Math.random() * HEIGHT])
     }
 
     // Create delaunay and then voronoi from poitns
@@ -67,23 +117,10 @@ function generate(){
         // Increment
         i++;
     }
-
-    // Generate road
-    let currCell = 0;
-    let currPoint = voronoi.cellPolygon(currCell)[0];
-    let currClosest = [256,256];
     
-    while(true)
-    {
-        for(const cell of voronoi.neighbors(currCell)){
-            points = voronoi.neighbors();
-            for(let i = 0; i < points.length; i++){
-                //if(points[i][0] < currPoint[0] && points[i][0] > currClosest[])
-            }
-        }
+    //generateRoadOld();
+    generateRoad();
 
-        break;
-    }
 }
 
 function drawMapOnCanvas(point){
@@ -109,6 +146,16 @@ function drawMapOnCanvas(point){
         i++;
     }
 
+    context.strokeStyle = "red";
+    context.beginPath();
+    context.moveTo(map.roadPoints[0][0],map.roadPoints[0][1])
+    for(i = 1; i < map.roadPoints.length; i++){
+        context.lineTo(map.roadPoints[i][0], map.roadPoints[i][1]);
+    }
+    context.stroke();
+    context.closePath();
+
+    // Camera point 
     if(point != null){
         context.beginPath();
         context.fillStyle = "#73f0ee"

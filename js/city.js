@@ -342,6 +342,40 @@ function createCellFoundations(){
 	}
 }
 
+function createRoad(){
+	// Convert map road points to vector points
+	let vectorArray = [];
+	for (let i = 0; i < map.roadPoints.length; i++) {
+		vectorArray.push(new THREE.Vector3(map.roadPoints[i][0] * 4 - 512, 2, map.roadPoints[i][1] * 4 - 512));
+
+	}
+
+	let roadSpline =  new THREE.CatmullRomCurve3(vectorArray);
+	roadSpline.type = 'catmullrom';
+
+	const extrudeSettings = {
+		steps           : 32,
+		bevelEnabled    : false,
+		extrudePath     : roadSpline
+	};
+
+	let pts = [], count = 3;
+	for (let i = 0; i < count; i ++ ) {
+		let l = 10;
+		let a = 2 * i / count * Math.PI;
+		pts.push( new THREE.Vector2 ( Math.cos( a ) * l, Math.sin( a ) * l ) );
+	}
+	let shape = new THREE.Shape(pts);
+
+	// Extrude the triangle along the CatmullRom curve
+	let geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+	let material = new THREE.MeshLambertMaterial( { color: 0xb00000, wireframe: false } );
+
+	// Create mesh with the resulting geometry
+	let mesh = new THREE.Mesh(geometry, material);
+	scene.add(mesh);
+}
+
 function getBuildingTexture(){
 	let canvas = document.createElement("canvas");
 	canvas.width = 32;
@@ -402,6 +436,7 @@ createMouseControls();
 // Geometry
 createTerrain();
 createCellFoundations();
+createRoad();
 
 let i = 0;
 for(i; i < map.cells.length; i++){
