@@ -102,6 +102,7 @@ THREE.FirstPersonControls = function ( object, domElement ) {
 
 	this.onMouseUp = function ( event ) {
 
+		
 		//event.preventDefault();
 		//event.stopPropagation();
 

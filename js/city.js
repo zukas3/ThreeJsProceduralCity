@@ -2,6 +2,7 @@
 var renderer, scene;
 var camera, cameraHelper;
 var directionalLight;
+var roadSpline;
 
 // Other
 var controls;
@@ -251,7 +252,7 @@ function setRandomBuildingTransformation(buildingMesh){
 	buildingMesh.scale.y  = (Math.random() * Math.random() * buildingMesh.scale.x) * perlinFactor * perlinFactor * 6 + 8;
 }
 
-// TODO put this back into Create Buildigns from poits and optimize it
+// TODO put this back into Create Buildigns from points and optimize it
 var boundingBoxes = [];
 
 function createBuildingsFromPoints(points, approximateHeight, approximateRotation){
@@ -283,10 +284,22 @@ function createBuildingsFromPoints(points, approximateHeight, approximateRotatio
 		let doesIntersect = false;
 		boundingBox.setFromObject(buildingMesh);
 
+		// Compare with buildings
 		for(let j = 0; j < boundingBoxes.length; j++){
 			if(boundingBox.intersectsBox(boundingBoxes[j])){
 				doesIntersect = true;
 				break;
+			}
+		}
+		
+		// Compare with road points
+		if(!doesIntersect){
+			for(let j = 0; j < 100; j++){
+				let sphere = new THREE.Sphere(roadSpline.getPoint(j / 100), 11)
+				if(boundingBox.intersectsSphere(sphere)){
+					doesIntersect = true;
+					break;
+				}
 			}
 		}
 
@@ -346,26 +359,27 @@ function createRoad(){
 	// Convert map road points to vector points
 	let vectorArray = [];
 	for (let i = 0; i < map.roadPoints.length; i++) {
-		vectorArray.push(new THREE.Vector3(map.roadPoints[i][0] * 4 - 512, 2, map.roadPoints[i][1] * 4 - 512));
+		vectorArray.push(new THREE.Vector3(map.roadPoints[i][0] * 4 - 512, 2.5, map.roadPoints[i][1] * 4 - 512));
 
 	}
 
-	let roadSpline =  new THREE.CatmullRomCurve3(vectorArray);
+	roadSpline =  new THREE.CatmullRomCurve3(vectorArray);
 	roadSpline.type = 'catmullrom';
 
 	const extrudeSettings = {
-		steps           : 32,
+		steps           : 64,
 		bevelEnabled    : false,
 		extrudePath     : roadSpline
 	};
 
 	let pts = [], count = 3;
 	for (let i = 0; i < count; i ++ ) {
-		let l = 10;
+		let l = 8;
 		let a = 2 * i / count * Math.PI;
 		pts.push( new THREE.Vector2 ( Math.cos( a ) * l, Math.sin( a ) * l ) );
 	}
 	let shape = new THREE.Shape(pts);
+	console.log(roadSpline.getPoint(0.5))
 
 	// Extrude the triangle along the CatmullRom curve
 	let geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
@@ -373,6 +387,7 @@ function createRoad(){
 
 	// Create mesh with the resulting geometry
 	let mesh = new THREE.Mesh(geometry, material);
+	mesh.receiveShadow = true;
 	scene.add(mesh);
 }
 
@@ -438,6 +453,7 @@ createTerrain();
 createCellFoundations();
 createRoad();
 
+// Buildings
 let i = 0;
 for(i; i < map.cells.length; i++){
 

@@ -18,7 +18,7 @@ function getRandomPointsInCell(index, amount){
     return points;
 }
 
-// 
+// Replaced with generateRoad
 function generateRoadOld(){
     // Generate road
     let currCell = 0;
@@ -48,7 +48,7 @@ function generateRoadOld(){
 function generateRoad(){
     let roadPoints = [];
 
-    let currentY = Math.random() * HEIGHT;
+    let currentY = HEIGHT / 2 + (Math.random() - 0.5) * 32;
     let currentX = 0;
     roadPoints.push([currentX,currentY])
     while(currentX < 256){
@@ -56,10 +56,9 @@ function generateRoad(){
         currentX = Math.min(256, currentX);
 
         currentY = currentY + (Math.random() - 0.5) * 64;
-        console.log(currentY);
+
         // Clamp
         currentY = Math.min(Math.max(0,currentY), 256);
-        console.log(currentY);
 
         // Add to points
         roadPoints.push([currentX, currentY])
@@ -159,7 +158,7 @@ function drawMapOnCanvas(point){
     if(point != null){
         context.beginPath();
         context.fillStyle = "#73f0ee"
-        context.arc(point[0] / 4 + 128, point[1] / 4 +128, 7, 0, 2 * Math.PI);
+        context.arc(point[0] / 4 + 128, point[1] / 4 + 128, 7, 0, 2 * Math.PI);
         context.fill();
     }
 }
