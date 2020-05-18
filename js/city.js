@@ -348,7 +348,7 @@ function createCellFoundations(){
 		else
 			color = 0x00AA00
 
-		var mesh = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: color } ) );
+		var mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial( { color: color } ) );
 		mesh.rotation.x = Math.PI * 0.5;
 		mesh.receiveShadow = true;
 		scene.add(mesh);
@@ -360,14 +360,13 @@ function createRoad(){
 	let vectorArray = [];
 	for (let i = 0; i < map.roadPoints.length; i++) {
 		vectorArray.push(new THREE.Vector3(map.roadPoints[i][0] * 4 - 512, 2.5, map.roadPoints[i][1] * 4 - 512));
-
 	}
 
 	roadSpline =  new THREE.CatmullRomCurve3(vectorArray);
 	roadSpline.type = 'catmullrom';
 
 	const extrudeSettings = {
-		steps           : 64,
+		steps           : 128,
 		bevelEnabled    : false,
 		extrudePath     : roadSpline
 	};
@@ -379,14 +378,48 @@ function createRoad(){
 		pts.push( new THREE.Vector2 ( Math.cos( a ) * l, Math.sin( a ) * l ) );
 	}
 	let shape = new THREE.Shape(pts);
-	console.log(roadSpline.getPoint(0.5))
 
 	// Extrude the triangle along the CatmullRom curve
 	let geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
-	let material = new THREE.MeshLambertMaterial( { color: 0xb00000, wireframe: false } );
+	
+	for(let i = 0; i < geometry.faceVertexUvs[0].length; i += 2){
+		geometry.faceVertexUvs[0][i][0].x = 0
+		geometry.faceVertexUvs[0][i][0].y = 0
+
+		geometry.faceVertexUvs[0][i][1].x = 1
+		geometry.faceVertexUvs[0][i][1].y = 0
+
+		geometry.faceVertexUvs[0][i][2].x = 0
+		geometry.faceVertexUvs[0][i][2].y = 1
+
+		// Other piece
+		geometry.faceVertexUvs[0][i+1][0].x = 0
+		geometry.faceVertexUvs[0][i+1][0].y = 1
+
+		geometry.faceVertexUvs[0][i+1][1].x = 0
+		geometry.faceVertexUvs[0][i+1][1].y = 0
+
+		geometry.faceVertexUvs[0][i+1][2].x = 1
+		geometry.faceVertexUvs[0][i+1][2].y = 1
+	}
+
+	geometry.elementsNeedUpdate = true;
+	geometry.computeFaceNormals();
+	geometry.computeVertexNormals();
+
+	// Generate and assign the texture
+	let texture = new THREE.Texture(getRoadTexture());
+	texture.anisotropy = renderer.getMaxAnisotropy();
+	texture.needsUpdate = true;
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	//texture.repeat.set(0.008, 0.008)
+	
+	let material = new THREE.MeshLambertMaterial( {wireframe: false, map: texture } );
 
 	// Create mesh with the resulting geometry
 	let mesh = new THREE.Mesh(geometry, material);
+	console.log(geometry)
 	mesh.receiveShadow = true;
 	scene.add(mesh);
 }
@@ -415,6 +448,52 @@ function getBuildingTexture(){
 	let canvas2 = document.createElement("canvas");
 	canvas2.width = 512;
 	canvas2.height  = 1024;
+
+	context = canvas2.getContext("2d");
+
+	// turn off smoothing
+	context.imageSmoothingEnabled   = false;
+	context.webkitImageSmoothingEnabled = false;
+	context.mozImageSmoothingEnabled  = false;
+
+	context.drawImage(canvas, 0, 0, canvas2.width, canvas2.height );
+	return canvas2;
+}
+
+
+function getRoadTexture(){
+	let canvas = document.createElement("canvas");
+	canvas.width = 32;
+	canvas.height = 32;
+	
+	// Get Context and Disable the smoothing/aliasing
+	let context = canvas.getContext("2d");
+	context.imageSmoothingEnabled   = false;
+	context.webkitImageSmoothingEnabled = false;
+	context.mozImageSmoothingEnabled  = false
+
+	// Fill it gray
+	context.fillStyle = "#111111";
+	context.fillRect(0, 0, 32, 32);
+	
+	for(var y = 0; y < 32; y += 1 ){
+		for(var x = 0; x < 32; x += 1 ){
+
+			if((x > 2 && x < 4) || (x > 27 && x < 29))
+				context.fillStyle = "#ffffff"
+			else if(x >= 15 && x <= 16)
+				context.fillStyle = "#ffff00"
+			else
+				context.fillStyle = "#111111"
+			//var value = Math.floor(Math.random() * 64);
+			context.fillRect( x, y, 1, 1 );
+		}
+	}
+
+	// We will now create new canvas to stretch the texture
+	let canvas2 = document.createElement("canvas");
+	canvas2.width = 512;
+	canvas2.height  = 512;
 
 	context = canvas2.getContext("2d");
 
