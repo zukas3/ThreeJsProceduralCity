@@ -103,9 +103,9 @@ function generate(){
     for(const cell of voronoi.cellPolygons()){
 
         if(i % 6 == 0){
-            map.cells.push({polygons: cell, hasBuildings: false})
+            map.cells.push({polygons: cell, hasBuildings: false, randomPoints: getRandomPointsInCell(i, 64)})
         } else {
-            map.cells.push({polygons: cell, hasBuildings: true, randomPoints: getRandomPointsInCell(i, 256)})
+            map.cells.push({polygons: cell, hasBuildings: true, randomPoints: getRandomPointsInCell(i, 128)})
         }
 
         // Gather all points

@@ -187,15 +187,25 @@ function getBuildingGeometry(hasRoof){
 		new THREE.Color(0xa9a39c), // Gray'ish
 		new THREE.Color(0x026397), // Blue
 		new THREE.Color(0xddcfb4)] // Marble-like
-	const randomColor = possibleColors[Math.floor(Math.random() * possibleColors.length)];
-	let slightlyModified = new THREE.Color()
-	slightlyModified.copy(randomColor);
-	slightlyModified.r += Math.random() * 0.2 - 0.1;
-	slightlyModified.g += Math.random() * 0.2 - 0.1;
-	slightlyModified.b += Math.random() * 0.2 - 0.1;
+
+
+	randomColor = possibleColors[Math.floor(Math.random() * possibleColors.length)].clone();
+	randomColor.r += Math.random() * 0.2 - 0.1;
+	randomColor.g += Math.random() * 0.2 - 0.1;
+	randomColor.b += Math.random() * 0.2 - 0.1;
 
 	for(let i = 0; i < buildingGeometry.faces.length; i++){
-		buildingGeometry.faces[i].color = slightlyModified;
+		buildingGeometry.faces[i].color = randomColor;
+
+		// Set the roof darker
+		if(hasRoof && i > buildingGeometry.faces.length - 7)
+		{
+			let roofColor = randomColor.clone();
+			roofColor.r -= 0.1;
+			roofColor.g -= 0.1;
+			roofColor.b -= 0.1;
+			buildingGeometry.faces[i].color = roofColor;
+		}
 	}
 
 	buildingGeometry.colorsNeedUpdate = true
@@ -210,51 +220,64 @@ function getBuildingGeometry(hasRoof){
 	return buildingGeometry;
 }
 
-////
-// NOT USED ANYMORE
-////
-function createRandomBuildings(amount){
-	let buildingGeometry = getBuildingGeometry();
-	let districtGeometry = new THREE.Geometry();
-	for(let i = 0; i < amount; i++){
-		// Build final mesh and add it to scene
-		let buildingMesh = new THREE.Mesh(buildingGeometry);
-		setRandomBuildingTransformation(buildingMesh)
-
-		// Merge meshes together into a single geometry for optimization
-		districtGeometry.mergeMesh(buildingMesh);
+function getTreeGeometry(){
+	let cylinder = new THREE.CylinderGeometry(2, 4, 16, 6);
+	
+	let brownColor = new THREE.Color(0x693310)
+	for(let i = 0; i < cylinder.faces.length; i++){
+		cylinder.faces[i].color = brownColor
 	}
 	
-	// Generate and assign the texture
-	let buildingTexture = new THREE.Texture(getBuildingTexture());
-	buildingTexture.anisotropy = renderer.getMaxAnisotropy();
-	buildingTexture.needsUpdate = true;
-
-	// Build final mesh and add it to scene
-	let cityMesh = new THREE.Mesh(districtGeometry, new THREE.MeshBasicMaterial( { map: buildingTexture, vertexColors: THREE.VertexColors } ) );
-	cityMesh.castShadow = true;
-	cityMesh.receiveShadow = true;
-	scene.add(cityMesh);
-}
-
-// NOT USED ANYMORE
-function setRandomBuildingTransformation(buildingMesh){
-	let xPos = (Math.random() * 2 - 1) * CITY_SIZE + BUILDING_DISTANCE_OFFSET_X;
-	let zPos = (Math.random() * 2 - 1) * CITY_SIZE + BUILDING_DISTANCE_OFFSET_Z; 
-	buildingMesh.position.x = Math.floor(xPos);
-	buildingMesh.position.z = Math.floor(zPos);
+	let sphere = new THREE.SphereGeometry(7, 8, 6);
+	sphere.translate(0,10,0)
 	
-	buildingMesh.rotation.y = Math.random() * Math.PI * 2;
+	for(let i = 0; i < sphere.vertices.length; i++){
+		sphere.vertices[i].x += Math.random() * 1.5
+		sphere.vertices[i].y += Math.random() * 1.5
+		sphere.vertices[i].z += Math.random() * 1.5
+	}
 
-	// More Math randoms to make smaller buildings more frequent (And more random :))
-	buildingMesh.scale.x  = Math.random()*Math.random()*Math.random()*Math.random() * 50 + 10;
-	buildingMesh.scale.z  = buildingMesh.scale.x;
-	let perlinFactor = (noise.perlin2(xPos / 640, zPos / 640) + 1);
-	buildingMesh.scale.y  = (Math.random() * Math.random() * buildingMesh.scale.x) * perlinFactor * perlinFactor * 6 + 8;
+	let greenColor = new THREE.Color(0x4edb23)
+	for(let i = 0; i < sphere.faces.length; i++){
+		sphere.faces[i].color = greenColor
+	}
+	
+	cylinder.merge(sphere);
+	cylinder.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
+	return cylinder;
 }
+
 
 // TODO put this back into Create Buildigns from points and optimize it
 var allBoundingBoxes = [];
+function doesMeshIntersectWithAnything(mesh)
+{
+	let boundingBox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+	let doesIntersect = false;
+	boundingBox.setFromObject(mesh);
+
+	// Compare with buildings and trees
+	for(let j = 0; j < allBoundingBoxes.length; j++){
+		if(boundingBox.intersectsBox(allBoundingBoxes[j])){
+			return true;
+		}
+	}
+	
+	// Compare with road points
+	if(!doesIntersect){
+		for(let j = 0; j < 100; j++){
+			let sphere = new THREE.Sphere(roadSpline.getPoint(j / 100), 11)
+			if(boundingBox.intersectsSphere(sphere)){
+				return true;
+			}
+		}
+	}
+
+	// Did not intersect with anything, add this bounding box and return false
+	allBoundingBoxes.push(boundingBox);
+	return false;
+}
+
 
 function createBuildingsFromPoints(points, approximateHeight, approximateRotation){
 	
@@ -264,7 +287,6 @@ function createBuildingsFromPoints(points, approximateHeight, approximateRotatio
 	let districtGeometry = new THREE.Geometry();
 
 	for(let i = 0; i < points.length; i++){
-		// Build final mesh and add it to scene
 		let buildingMesh = new THREE.Mesh(buildingGeometry);
 
 		// Set slightly randomized 
@@ -284,35 +306,10 @@ function createBuildingsFromPoints(points, approximateHeight, approximateRotatio
 
 		buildingMesh.scale.y  = approximateHeight + 20 * Math.random() * Math.random();
 
-		// Create bounding box and comapre for other boxes
-		let boundingBox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
-		let doesIntersect = false;
-		boundingBox.setFromObject(buildingMesh);
-
-		// Compare with buildings
-		for(let j = 0; j < allBoundingBoxes.length; j++){
-			if(boundingBox.intersectsBox(allBoundingBoxes[j])){
-				doesIntersect = true;
-				break;
-			}
-		}
-		
-		// Compare with road points
-		if(!doesIntersect){
-			for(let j = 0; j < 100; j++){
-				let sphere = new THREE.Sphere(roadSpline.getPoint(j / 100), 11)
-				if(boundingBox.intersectsSphere(sphere)){
-					doesIntersect = true;
-					break;
-				}
-			}
-		}
-
+		let doesIntersect = doesMeshIntersectWithAnything(buildingMesh)
 		if(!doesIntersect)
 		{
-			// Merge meshes together into a single geometry for optimization
 			districtGeometry.mergeMesh(buildingMesh);
-			allBoundingBoxes.push(boundingBox);
 		}
 	}
 	
@@ -326,6 +323,45 @@ function createBuildingsFromPoints(points, approximateHeight, approximateRotatio
 	cityMesh.castShadow = true;
 	cityMesh.receiveShadow = true;
 	scene.add(cityMesh);
+}
+
+function createParkFromPoints(points){
+
+	let parkGeometry = new THREE.Geometry();
+
+	for(let i = 0; i < points.length; i++){
+		let treeGeometry = getTreeGeometry();
+
+		let scaleFactor = 0.4 + Math.random() * 0.4
+		treeGeometry.scale(scaleFactor, scaleFactor * 1.2, scaleFactor);
+		// Build final mesh and add it to scene
+		let treeMesh = new THREE.Mesh(treeGeometry);
+
+		// Offset from map's scale
+		treeMesh.position.x = points[i][0] * 4 - 512;
+		treeMesh.position.z = points[i][1] * 4 - 512;
+		
+		treeMesh.position.y += 8;
+
+
+		treeMesh.rotation.y = Math.random() * Math.PI * 2;
+
+		let doesIntersect = doesMeshIntersectWithAnything(treeMesh)
+		if(!doesIntersect)
+		{
+			parkGeometry.mergeMesh(treeMesh);
+		}
+	}
+
+	let texture = new THREE.Texture(getNoiseTexture());
+	texture.anisotropy = renderer.getMaxAnisotropy();
+	texture.needsUpdate = true;
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	//texture.repeat.set(0.048, 0.048)
+
+	let parkMesh = new THREE.Mesh(parkGeometry, new THREE.MeshLambertMaterial({ map: texture, vertexColors: THREE.VertexColors }));
+	scene.add(parkMesh);
 }
 
 function createCellFoundations(){
@@ -345,15 +381,29 @@ function createCellFoundations(){
 		var geometry = new THREE.ExtrudeBufferGeometry(shape, extrudeSettings);
 
 		let color;
+		let material;
 		if(map.cells[i].hasBuildings)
 		{
+			// Random gray'ish
 			var value = Math.floor( Math.random() * 128) + 40;
 			color = `rgb(${value}, ${value}, ${value})`;
-		}
-		else
-			color = 0x00AA00
 
-		var mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial( { color: color } ) );
+			material = new THREE.MeshLambertMaterial( { color: color } )
+		}
+		else // In case it's park
+		{
+			color = 0x00AA00
+			let texture = new THREE.Texture(getNoiseTexture());
+			texture.anisotropy = renderer.getMaxAnisotropy();
+			texture.needsUpdate = true;
+			texture.wrapS = THREE.RepeatWrapping;
+			texture.wrapT = THREE.RepeatWrapping;
+			texture.repeat.set(0.048, 0.048)
+
+			material = new THREE.MeshLambertMaterial( { map: texture, color: color} )
+		}
+
+		var mesh = new THREE.Mesh(geometry, material);
 		mesh.rotation.x = Math.PI * 0.5;
 		mesh.receiveShadow = true;
 		scene.add(mesh);
@@ -511,6 +561,48 @@ function getRoadTexture(){
 	return canvas2;
 }
 
+function getNoiseTexture(){
+	let canvas = document.createElement("canvas");
+	canvas.width = 128;
+	canvas.height = 128;
+	
+	// Get Context and Disable the smoothing/aliasing
+	let context = canvas.getContext("2d");
+	context.imageSmoothingEnabled   = false;
+	context.webkitImageSmoothingEnabled = false;
+	context.mozImageSmoothingEnabled  = false
+
+	// Fill it white
+	context.fillStyle = "#FFFFFFFF";
+	context.fillRect(0, 0, 128, 128);
+	
+	let opacity;
+	opacity = opacity || .2;
+	for(var y = 0; y < 128; y += 1 ){
+		for(var x = 0; x < 128; x += 1 ){
+			number = Math.floor( Math.random() * 100 + 150 );
+ 
+			context.fillStyle = "rgb(" + number + "," + number + "," + number + ")";
+			context.fillRect(x, y, 1, 1);
+		}
+	}
+
+	// We will now create new canvas to stretch the texture
+	let canvas2 = document.createElement("canvas");
+	canvas2.width = 512;
+	canvas2.height  = 512;
+
+	context = canvas2.getContext("2d");
+
+	// turn off smoothing
+	context.imageSmoothingEnabled   = false;
+	context.webkitImageSmoothingEnabled = false;
+	context.mozImageSmoothingEnabled  = false;
+
+	context.drawImage(canvas, 0, 0, canvas2.width, canvas2.height );
+	return canvas2;
+}
+
 function onWindowResize(){
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -542,9 +634,17 @@ let i = 0;
 for(i; i < map.cells.length; i++){
 
 	if(map.cells[i].hasBuildings)
+	{
 		createBuildingsFromPoints(map.cells[i].randomPoints, 
 			Math.random() * Math.random() * Math.random() * 140 + 15,
 			Math.random() * Math.PI * 2)
+	}
+	else
+	{
+		createParkFromPoints(map.cells[i].randomPoints);
+	}
 }
+
+getTreeGeometry();
 
 animate();
