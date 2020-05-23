@@ -145,7 +145,7 @@ function createTerrain(){
 	scene.add(mesh);
 }
 
-function getBuildingGeometry(){
+function getBuildingGeometry(hasRoof){
 	let buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
 	// Move the pivot point to the bottom
 	buildingGeometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
@@ -155,7 +155,7 @@ function getBuildingGeometry(){
 	buildingGeometry.faceVertexUvs[0].splice(6, 2);
 
 	// Add roof 
-	if(Math.random() > 0.75){
+	if(hasRoof){
 		buildingGeometry.vertices.push(new THREE.Vector3(0,1.25,0.5));
 		buildingGeometry.vertices.push(new THREE.Vector3(0,1.25,-0.5));
 
@@ -215,14 +215,14 @@ function getBuildingGeometry(){
 ////
 function createRandomBuildings(amount){
 	let buildingGeometry = getBuildingGeometry();
-	let cityGeometry = new THREE.Geometry();
+	let districtGeometry = new THREE.Geometry();
 	for(let i = 0; i < amount; i++){
 		// Build final mesh and add it to scene
 		let buildingMesh = new THREE.Mesh(buildingGeometry);
 		setRandomBuildingTransformation(buildingMesh)
 
 		// Merge meshes together into a single geometry for optimization
-		cityGeometry.mergeMesh(buildingMesh);
+		districtGeometry.mergeMesh(buildingMesh);
 	}
 	
 	// Generate and assign the texture
@@ -231,12 +231,13 @@ function createRandomBuildings(amount){
 	buildingTexture.needsUpdate = true;
 
 	// Build final mesh and add it to scene
-	let cityMesh = new THREE.Mesh(cityGeometry, new THREE.MeshBasicMaterial( { map: buildingTexture, vertexColors: THREE.VertexColors } ) );
+	let cityMesh = new THREE.Mesh(districtGeometry, new THREE.MeshBasicMaterial( { map: buildingTexture, vertexColors: THREE.VertexColors } ) );
 	cityMesh.castShadow = true;
 	cityMesh.receiveShadow = true;
 	scene.add(cityMesh);
 }
 
+// NOT USED ANYMORE
 function setRandomBuildingTransformation(buildingMesh){
 	let xPos = (Math.random() * 2 - 1) * CITY_SIZE + BUILDING_DISTANCE_OFFSET_X;
 	let zPos = (Math.random() * 2 - 1) * CITY_SIZE + BUILDING_DISTANCE_OFFSET_Z; 
@@ -253,25 +254,29 @@ function setRandomBuildingTransformation(buildingMesh){
 }
 
 // TODO put this back into Create Buildigns from points and optimize it
-var boundingBoxes = [];
+var allBoundingBoxes = [];
 
 function createBuildingsFromPoints(points, approximateHeight, approximateRotation){
-	let buildingGeometry = getBuildingGeometry();
-	let cityGeometry = new THREE.Geometry();
+	
+	let useRoofs = approximateHeight <= 25;
+	let buildingGeometry = getBuildingGeometry(useRoofs);
+
+	let districtGeometry = new THREE.Geometry();
+
 	for(let i = 0; i < points.length; i++){
 		// Build final mesh and add it to scene
 		let buildingMesh = new THREE.Mesh(buildingGeometry);
 
-		// Set transformation
-		buildingMesh.rotation.y = approximateRotation + Math.random() * Math.PI * 0.1;
+		// Set slightly randomized 
+		buildingMesh.rotation.y = approximateRotation; // + Math.random() * Math.PI * 0.1;
 
 		// Offset from map's scale
-		buildingMesh.position.x = points[i][0] * 4 - 512
-		buildingMesh.position.z = points[i][1] * 4 - 512
+		buildingMesh.position.x = points[i][0] * 4 - 512;
+		buildingMesh.position.z = points[i][1] * 4 - 512;
 
 		buildingMesh.scale.x  = Math.random() * Math.random() * Math.random() * approximateHeight * 0.25 + 16 + 16 * (approximateHeight * 0.01);
 
-		// Randomize size
+		// Randomize size, 75% will be rectangular
 		if(Math.random() > 0.25)
 			buildingMesh.scale.z  = buildingMesh.scale.x;
 		else
@@ -285,8 +290,8 @@ function createBuildingsFromPoints(points, approximateHeight, approximateRotatio
 		boundingBox.setFromObject(buildingMesh);
 
 		// Compare with buildings
-		for(let j = 0; j < boundingBoxes.length; j++){
-			if(boundingBox.intersectsBox(boundingBoxes[j])){
+		for(let j = 0; j < allBoundingBoxes.length; j++){
+			if(boundingBox.intersectsBox(allBoundingBoxes[j])){
 				doesIntersect = true;
 				break;
 			}
@@ -306,8 +311,8 @@ function createBuildingsFromPoints(points, approximateHeight, approximateRotatio
 		if(!doesIntersect)
 		{
 			// Merge meshes together into a single geometry for optimization
-			cityGeometry.mergeMesh(buildingMesh);
-			boundingBoxes.push(boundingBox);
+			districtGeometry.mergeMesh(buildingMesh);
+			allBoundingBoxes.push(boundingBox);
 		}
 	}
 	
@@ -317,7 +322,7 @@ function createBuildingsFromPoints(points, approximateHeight, approximateRotatio
 	buildingTexture.needsUpdate = true;
 
 	// Build final mesh and add it to scene
-	let cityMesh = new THREE.Mesh(cityGeometry, new THREE.MeshLambertMaterial( { map: buildingTexture, vertexColors: THREE.VertexColors } )  );
+	let cityMesh = new THREE.Mesh(districtGeometry, new THREE.MeshLambertMaterial( { map: buildingTexture, vertexColors: THREE.VertexColors } )  );
 	cityMesh.castShadow = true;
 	cityMesh.receiveShadow = true;
 	scene.add(cityMesh);
@@ -366,9 +371,9 @@ function createRoad(){
 	roadSpline.type = 'catmullrom';
 
 	const extrudeSettings = {
-		steps           : 128,
-		bevelEnabled    : false,
-		extrudePath     : roadSpline
+		steps: 128,
+		bevelEnabled : false,
+		extrudePath : roadSpline
 	};
 
 	let pts = [], count = 3;
