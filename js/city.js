@@ -343,7 +343,6 @@ function createParkFromPoints(points){
 		
 		treeMesh.position.y += 8;
 
-
 		treeMesh.rotation.y = Math.random() * Math.PI * 2;
 
 		let doesIntersect = doesMeshIntersectWithAnything(treeMesh)
@@ -356,11 +355,10 @@ function createParkFromPoints(points){
 	let texture = new THREE.Texture(getNoiseTexture());
 	texture.anisotropy = renderer.getMaxAnisotropy();
 	texture.needsUpdate = true;
-	texture.wrapS = THREE.RepeatWrapping;
-	texture.wrapT = THREE.RepeatWrapping;
-	//texture.repeat.set(0.048, 0.048)
 
 	let parkMesh = new THREE.Mesh(parkGeometry, new THREE.MeshLambertMaterial({ map: texture, vertexColors: THREE.VertexColors }));
+	parkMesh.receiveShadow = true;
+	parkMesh.castShadow = true;
 	scene.add(parkMesh);
 }
 
