@@ -18,33 +18,6 @@ function getRandomPointsInCell(index, amount){
     return points;
 }
 
-// Replaced with generateRoad
-function generateRoadOld(){
-    // Generate road
-    let currCell = 0;
-    let currPoint = voronoi.cellPolygon(currCell)[0];
-    let currClosest = [256,256];
-    let pointArray = [currPoint];
-    
-    while(true)
-    {
-        for(const cell of voronoi.neighbors(currCell)){
-            points = voronoi.neighbors();
-            for(let i = 0; i < points.length; i++){
-                // If inspected point is to the right of currPoint and left of currClosest
-                if(points[i][0] > currPoint[0] && points[i][0] < currClosest[0]){
-                    currClosest = points[i]
-                }
-            }
-
-            currClosest
-        }
-
-        if(points[i] >= 256)
-            break;
-    }
-}
-
 function generateRoad(){
     let roadPoints = [];
 

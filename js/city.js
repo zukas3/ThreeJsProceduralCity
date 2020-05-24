@@ -67,8 +67,7 @@ function initialize(){
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 	
-	
-	document.body.appendChild( renderer.domElement );
+	document.body.appendChild(renderer.domElement);
 
 	light = new THREE.HemisphereLight( 0xfffff0, 0x101020, 0.6 );
 	light.position.set( 0.75, 5, 0.25 );
