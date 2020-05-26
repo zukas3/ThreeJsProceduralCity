@@ -444,7 +444,7 @@ function createRoad(){
 		geometry.faceVertexUvs[0][i][2].x = 0
 		geometry.faceVertexUvs[0][i][2].y = 1
 
-		// Other piece
+		// Other triangle
 		geometry.faceVertexUvs[0][i+1][0].x = 0
 		geometry.faceVertexUvs[0][i+1][0].y = 1
 
@@ -476,6 +476,9 @@ function createRoad(){
 	scene.add(mesh);
 }
 
+//////////////
+// TEXTURES //
+//////////////
 function getBuildingTexture(){
 	let canvas = document.createElement("canvas");
 	canvas.width = 32;
@@ -554,7 +557,10 @@ function getRoadTexture(){
 	context.webkitImageSmoothingEnabled = false;
 	context.mozImageSmoothingEnabled  = false;
 
+	
+	
 	context.drawImage(canvas, 0, 0, canvas2.width, canvas2.height );
+
 	return canvas2;
 }
 

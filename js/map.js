@@ -90,9 +90,7 @@ function generate(){
         i++;
     }
     
-    //generateRoadOld();
     generateRoad();
-
 }
 
 function drawMapOnCanvas(point){
