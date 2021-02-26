@@ -6,3 +6,8 @@ Check it out live at: https://zukas3.github.io/ThreeJsProceduralCity/
 ## Usage
 
 Simply clone the repository and open index.html in your browser :).
+
+## Media
+
+![alt text](media/example_0.png)
+![alt text](media/example_1.png)
